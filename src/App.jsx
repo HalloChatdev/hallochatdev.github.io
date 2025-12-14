@@ -182,7 +182,7 @@ function App() {
               <li><a href="https://github.com/Ink-dark/HalloChat">GitHub</a></li>
               <li><a href="https://gitee.com/moranqidarkseven/HalloChat-Qt">Gitee</a></li>
               <li><a href="mailto:dev@hallochat.cn">联系我们</a></li>
-              <li><a href="#">许可证</a></li>
+              <li><a href="#">许可证：MIT License</a></li>
             </ul>
           </div>
           <div className="footer-section">
@@ -192,7 +192,7 @@ function App() {
           </div>
         </div>
         <div className="footer-bottom">
-          <p>© 2025 HalloChat. All rights reserved.</p>
+          <p>© 2025 Ink-dark（墨染柒Darkseven）-HalloChat开发团队. All rights reserved.</p>
         </div>
       </footer>
     </div>
