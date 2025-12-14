@@ -29,15 +29,20 @@ jobs:
           }' \
           "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_QIYE_WEBHOOK_KEY }}"
       
-      - name: 记录检出开始时间
-        run: echo "CHECKOUT_START=$(date +%s)" >> $GITHUB_ENV
-        
+      - name: 代码检出
+        id: checkout
+        run: |
+          CHECKOUT_START=$(date +%s)
+          echo "CHECKOUT_START=$CHECKOUT_START" >> $GITHUB_ENV
+          
       - uses: actions/checkout@v4
       
       - name: 发送检出完成通知
         run: |
           CHECKOUT_END=$(date +%s)
           CHECKOUT_DURATION=$((CHECKOUT_END - ${{ env.CHECKOUT_START }}))
+          echo "CHECKOUT_DURATION=$CHECKOUT_DURATION" >> $GITHUB_ENV
+          
           curl -s -H "Content-Type: application/json" \
           -X POST \
           -d '{
@@ -49,11 +54,13 @@ jobs:
           }' \
           "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_QIYE_WEBHOOK_KEY }}"
       
-      - name: 记录Node.js环境准备开始时间
-        run: echo "NODE_SETUP_START=$(date +%s)" >> $GITHUB_ENV
-      
       - name: Node.js 环境准备
-        uses: actions/setup-node@v4
+        id: node-setup
+        run: |
+          NODE_SETUP_START=$(date +%s)
+          echo "NODE_SETUP_START=$NODE_SETUP_START" >> $GITHUB_ENV
+          
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
@@ -62,64 +69,85 @@ jobs:
         run: |
           NODE_SETUP_END=$(date +%s)
           NODE_SETUP_DURATION=$((NODE_SETUP_END - ${{ env.NODE_SETUP_START }}))
+          echo "NODE_SETUP_DURATION=$NODE_SETUP_DURATION" >> $GITHUB_ENV
+          
+          CURRENT_TIME=$(date +%s)
+          TOTAL_SO_FAR=$((CURRENT_TIME - ${{ env.START_TIME }}))
+          
           curl -s -H "Content-Type: application/json" \
           -X POST \
           -d '{
             "msgtype": "markdown",
             "markdown": {
-              "content": "**✅ 第二步完成：Node.js环境准备**\n\n---\n> **步骤用时：** `'"$NODE_SETUP_DURATION"'秒`\n> **累计用时：** `'"$((NODE_SETUP_END - ${{ env.START_TIME }}))"'秒`\n> **状态：** <font color=\"success\">成功</font>\n\n📚 即将开始第三步：依赖安装",
+              "content": "**✅ 第二步完成：Node.js环境准备**\n\n---\n> **步骤用时：** `'"$NODE_SETUP_DURATION"'秒`\n> **累计用时：** `'"$TOTAL_SO_FAR"'秒`\n> **状态：** <font color=\"success\">成功</font>\n\n📚 即将开始第三步：依赖安装",
               "mentioned_list": []
             }
           }' \
           "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_QIYE_WEBHOOK_KEY }}"
       
-      - name: 记录依赖安装开始时间
-        run: echo "INSTALL_START=$(date +%s)" >> $GITHUB_ENV
-      
       - name: 准备依赖
-        run: npm install
+        id: install
+        run: |
+          INSTALL_START=$(date +%s)
+          echo "INSTALL_START=$INSTALL_START" >> $GITHUB_ENV
+          
+      - run: npm install
       
       - name: 发送依赖安装完成通知
         run: |
           INSTALL_END=$(date +%s)
           INSTALL_DURATION=$((INSTALL_END - ${{ env.INSTALL_START }}))
+          echo "INSTALL_DURATION=$INSTALL_DURATION" >> $GITHUB_ENV
+          
+          CURRENT_TIME=$(date +%s)
+          TOTAL_SO_FAR=$((CURRENT_TIME - ${{ env.START_TIME }}))
+          
           curl -s -H "Content-Type: application/json" \
           -X POST \
           -d '{
             "msgtype": "markdown",
             "markdown": {
-              "content": "**✅ 第三步完成：依赖安装**\n\n---\n> **步骤用时：** `'"$INSTALL_DURATION"'秒`\n> **累计用时：** `'"$((INSTALL_END - ${{ env.START_TIME }}))"'秒`\n> **状态：** <font color=\"success\">成功</font>\n\n🔨 即将开始第四步：项目构建",
+              "content": "**✅ 第三步完成：依赖安装**\n\n---\n> **步骤用时：** `'"$INSTALL_DURATION"'秒`\n> **累计用时：** `'"$TOTAL_SO_FAR"'秒`\n> **状态：** <font color=\"success\">成功</font>\n\n🔨 即将开始第四步：项目构建",
               "mentioned_list": []
             }
           }' \
           "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_QIYE_WEBHOOK_KEY }}"
       
-      - name: 记录构建开始时间
-        run: echo "BUILD_START=$(date +%s)" >> $GITHUB_ENV
-      
       - name: 构建项目文件
-        run: npm run build
+        id: build
+        run: |
+          BUILD_START=$(date +%s)
+          echo "BUILD_START=$BUILD_START" >> $GITHUB_ENV
+          
+      - run: npm run build
       
       - name: 发送构建完成通知
         run: |
           BUILD_END=$(date +%s)
           BUILD_DURATION=$((BUILD_END - ${{ env.BUILD_START }}))
+          echo "BUILD_DURATION=$BUILD_DURATION" >> $GITHUB_ENV
+          
+          CURRENT_TIME=$(date +%s)
+          TOTAL_SO_FAR=$((CURRENT_TIME - ${{ env.START_TIME }}))
+          
           curl -s -H "Content-Type: application/json" \
           -X POST \
           -d '{
             "msgtype": "markdown",
             "markdown": {
-              "content": "**✅ 第四步完成：项目构建**\n\n---\n> **步骤用时：** `'"$BUILD_DURATION"'秒`\n> **累计用时：** `'"$((BUILD_END - ${{ env.START_TIME }}))"'秒`\n> **状态：** <font color=\"success\">成功</font>\n\n🚀 即将开始最后一步：部署到GitHub Pages",
+              "content": "**✅ 第四步完成：项目构建**\n\n---\n> **步骤用时：** `'"$BUILD_DURATION"'秒`\n> **累计用时：** `'"$TOTAL_SO_FAR"'秒`\n> **状态：** <font color=\"success\">成功</font>\n\n🚀 即将开始最后一步：部署到GitHub Pages",
               "mentioned_list": []
             }
           }' \
           "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_QIYE_WEBHOOK_KEY }}"
       
-      - name: 记录部署开始时间
-        run: echo "DEPLOY_START=$(date +%s)" >> $GITHUB_ENV
-      
       - name: 发布到 GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+        id: deploy
+        run: |
+          DEPLOY_START=$(date +%s)
+          echo "DEPLOY_START=$DEPLOY_START" >> $GITHUB_ENV
+          
+      - uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
@@ -130,12 +158,18 @@ jobs:
           DEPLOY_DURATION=$((DEPLOY_END - ${{ env.DEPLOY_START }}))
           TOTAL_DURATION=$((DEPLOY_END - ${{ env.START_TIME }}))
           
+          # 计算各步骤用时
+          CHECKOUT_DURATION=${{ env.CHECKOUT_DURATION }}
+          NODE_SETUP_DURATION=${{ env.NODE_SETUP_DURATION }}
+          INSTALL_DURATION=${{ env.INSTALL_DURATION }}
+          BUILD_DURATION=${{ env.BUILD_DURATION }}
+          
           curl -s -H "Content-Type: application/json" \
           -X POST \
           -d '{
             "msgtype": "markdown",
             "markdown": {
-              "content": "**🎉 构建部署完成！**\n\n---\n> **最后一步用时：** `'"$DEPLOY_DURATION"'秒`\n> **总用时：** `'"$TOTAL_DURATION"'秒`\n> **最终状态：** <font color=\"success\">部署成功</font>\n> **网站地址：** [hallochatdev.github.io](https://hallochatdev.github.io)\n\n📊 **各步骤用时统计：**\n- 代码检出：`'"$(( ${{ env.CHECKOUT_END }} - ${{ env.CHECKOUT_START }} ))"'秒`\n- 环境准备：`'"$(( ${{ env.NODE_SETUP_END }} - ${{ env.NODE_SETUP_START }} ))"'秒`\n- 依赖安装：`'"$(( ${{ env.INSTALL_END }} - ${{ env.INSTALL_START }} ))"'秒`\n- 项目构建：`'"$(( ${{ env.BUILD_END }} - ${{ env.BUILD_START }} ))"'秒`\n- 部署发布：`'"$DEPLOY_DURATION"'秒`\n\n💫 所有步骤已完成，网站已更新！",
+              "content": "**🎉 构建部署完成！**\n\n---\n> **最后一步用时：** `'"$DEPLOY_DURATION"'秒`\n> **总用时：** `'"$TOTAL_DURATION"'秒`\n> **最终状态：** <font color=\"success\">部署成功</font>\n> **网站地址：** [hallochatdev.github.io](https://hallochatdev.github.io)\n\n📊 **各步骤用时统计：**\n- 代码检出：`'"$CHECKOUT_DURATION"'秒`\n- 环境准备：`'"$NODE_SETUP_DURATION"'秒`\n- 依赖安装：`'"$INSTALL_DURATION"'秒`\n- 项目构建：`'"$BUILD_DURATION"'秒`\n- 部署发布：`'"$DEPLOY_DURATION"'秒`\n\n💫 所有步骤已完成，网站已更新！",
               "mentioned_list": ["@all"]
             }
           }' \
