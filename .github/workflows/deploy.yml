@@ -27,21 +27,21 @@ jobs:
           }' \
           "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_QIYE_WEBHOOK_KEY }}"
       
-      # 代码检出（合并时间记录）
-      - name: 代码检出
+      # 记录代码检出开始时间
+      - name: 记录代码检出开始时间
         run: |
           CHECKOUT_START=$(date +%s)
           echo "CHECKOUT_START=$CHECKOUT_START" >> $GITHUB_ENV
-          
-          # 实际的代码检出操作已合并到该步骤
-          git checkout ${{ github.ref }}
-          
-          CHECKOUT_END=$(date +%s)
-          CHECKOUT_DURATION=$((CHECKOUT_END - $CHECKOUT_START))
-          echo "CHECKOUT_DURATION=$CHECKOUT_DURATION" >> $GITHUB_ENV
       
-      # 使用 actions/checkout 动作确保正确检出
+      # 使用 actions/checkout 动作进行代码检出
       - uses: actions/checkout@v4
+      
+      # 记录代码检出完成时间
+      - name: 记录代码检出完成时间
+        run: |
+          CHECKOUT_END=$(date +%s)
+          CHECKOUT_DURATION=$((CHECKOUT_END - ${{ env.CHECKOUT_START }}))
+          echo "CHECKOUT_DURATION=$CHECKOUT_DURATION" >> $GITHUB_ENV
       
       # Node.js 环境准备（合并时间记录）
       - name: Node.js 环境准备
