@@ -12,164 +12,110 @@ jobs:
     permissions:
       contents: write
     steps:
-      # 记录开始时间
-      - name: 记录构建开始时间
-        run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
-        
-      - name: 发送构建开始通知
+      # 记录开始时间和发送开始通知
+      - name: 初始化构建流程
         run: |
+          echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
           curl -s -H "Content-Type: application/json" \
           -X POST \
           -d '{
             "msgtype": "markdown",
             "markdown": {
-              "content": "**墨璃温馨提示：构建流程开始啦！**\n\n---\n> **仓库：** <font color=\"info\">${{ github.repository }}</font>\n> **提交者：** <font color=\"comment\">${{ github.actor }}</font>\n> **分支：** `${{ github.ref_name }}`\n> **开始时间：** `$(date +"%Y-%m-%d %H:%M:%S")`\n\n🚀 即将开始第一步：代码检出",
+              "content": "**墨璃温馨提示：构建流程开始啦！**\n\n---\n> **仓库：** <font color=\"info\">${{ github.repository }}</font>\n> **提交者：** <font color=\"comment\">${{ github.actor }}</font>\n> **分支：** `${{ github.ref_name }}`\n> **开始时间：** `$(date +"%Y-%m-%d %H:%M:%S")`\n\n🚀 开始执行构建部署流程",
               "mentioned_list": ["@all"]
             }
           }' \
           "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_QIYE_WEBHOOK_KEY }}"
       
+      # 代码检出（合并时间记录）
       - name: 代码检出
-        id: checkout
         run: |
           CHECKOUT_START=$(date +%s)
           echo "CHECKOUT_START=$CHECKOUT_START" >> $GITHUB_ENV
           
+          # 实际的代码检出操作已合并到该步骤
+          git checkout ${{ github.ref }}
+          
+          CHECKOUT_END=$(date +%s)
+          CHECKOUT_DURATION=$((CHECKOUT_END - $CHECKOUT_START))
+          echo "CHECKOUT_DURATION=$CHECKOUT_DURATION" >> $GITHUB_ENV
+      
+      # 使用 actions/checkout 动作确保正确检出
       - uses: actions/checkout@v4
       
-      - name: 发送检出完成通知
-        run: |
-          CHECKOUT_END=$(date +%s)
-          CHECKOUT_DURATION=$((CHECKOUT_END - ${{ env.CHECKOUT_START }}))
-          echo "CHECKOUT_DURATION=$CHECKOUT_DURATION" >> $GITHUB_ENV
-          
-          curl -s -H "Content-Type: application/json" \
-          -X POST \
-          -d '{
-            "msgtype": "markdown",
-            "markdown": {
-              "content": "**✅ 第一步完成：代码检出**\n\n---\n> **步骤用时：** `'"$CHECKOUT_DURATION"'秒`\n> **状态：** <font color=\"success\">成功</font>\n\n📦 即将开始第二步：Node.js环境准备",
-              "mentioned_list": []
-            }
-          }' \
-          "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_QIYE_WEBHOOK_KEY }}"
-      
+      # Node.js 环境准备（合并时间记录）
       - name: Node.js 环境准备
-        id: node-setup
         run: |
           NODE_SETUP_START=$(date +%s)
           echo "NODE_SETUP_START=$NODE_SETUP_START" >> $GITHUB_ENV
-          
+      
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
       
-      - name: 发送Node.js环境准备完成通知
+      - name: 记录Node.js环境准备完成时间
         run: |
           NODE_SETUP_END=$(date +%s)
           NODE_SETUP_DURATION=$((NODE_SETUP_END - ${{ env.NODE_SETUP_START }}))
           echo "NODE_SETUP_DURATION=$NODE_SETUP_DURATION" >> $GITHUB_ENV
-          
-          CURRENT_TIME=$(date +%s)
-          TOTAL_SO_FAR=$((CURRENT_TIME - ${{ env.START_TIME }}))
-          
-          curl -s -H "Content-Type: application/json" \
-          -X POST \
-          -d '{
-            "msgtype": "markdown",
-            "markdown": {
-              "content": "**✅ 第二步完成：Node.js环境准备**\n\n---\n> **步骤用时：** `'"$NODE_SETUP_DURATION"'秒`\n> **累计用时：** `'"$TOTAL_SO_FAR"'秒`\n> **状态：** <font color=\"success\">成功</font>\n\n📚 即将开始第三步：依赖安装",
-              "mentioned_list": []
-            }
-          }' \
-          "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_QIYE_WEBHOOK_KEY }}"
       
-      - name: 准备依赖
-        id: install
+      # 依赖安装（合并时间记录）
+      - name: 依赖安装
         run: |
           INSTALL_START=$(date +%s)
           echo "INSTALL_START=$INSTALL_START" >> $GITHUB_ENV
           
-      - run: npm install
-      
-      - name: 发送依赖安装完成通知
-        run: |
+          npm install
+          
           INSTALL_END=$(date +%s)
-          INSTALL_DURATION=$((INSTALL_END - ${{ env.INSTALL_START }}))
+          INSTALL_DURATION=$((INSTALL_END - $INSTALL_START))
           echo "INSTALL_DURATION=$INSTALL_DURATION" >> $GITHUB_ENV
-          
-          CURRENT_TIME=$(date +%s)
-          TOTAL_SO_FAR=$((CURRENT_TIME - ${{ env.START_TIME }}))
-          
-          curl -s -H "Content-Type: application/json" \
-          -X POST \
-          -d '{
-            "msgtype": "markdown",
-            "markdown": {
-              "content": "**✅ 第三步完成：依赖安装**\n\n---\n> **步骤用时：** `'"$INSTALL_DURATION"'秒`\n> **累计用时：** `'"$TOTAL_SO_FAR"'秒`\n> **状态：** <font color=\"success\">成功</font>\n\n🔨 即将开始第四步：项目构建",
-              "mentioned_list": []
-            }
-          }' \
-          "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_QIYE_WEBHOOK_KEY }}"
       
-      - name: 构建项目文件
-        id: build
+      # 项目构建（合并时间记录）
+      - name: 项目构建
         run: |
           BUILD_START=$(date +%s)
           echo "BUILD_START=$BUILD_START" >> $GITHUB_ENV
           
-      - run: npm run build
-      
-      - name: 发送构建完成通知
-        run: |
+          npm run build
+          
           BUILD_END=$(date +%s)
-          BUILD_DURATION=$((BUILD_END - ${{ env.BUILD_START }}))
+          BUILD_DURATION=$((BUILD_END - $BUILD_START))
           echo "BUILD_DURATION=$BUILD_DURATION" >> $GITHUB_ENV
-          
-          CURRENT_TIME=$(date +%s)
-          TOTAL_SO_FAR=$((CURRENT_TIME - ${{ env.START_TIME }}))
-          
-          curl -s -H "Content-Type: application/json" \
-          -X POST \
-          -d '{
-            "msgtype": "markdown",
-            "markdown": {
-              "content": "**✅ 第四步完成：项目构建**\n\n---\n> **步骤用时：** `'"$BUILD_DURATION"'秒`\n> **累计用时：** `'"$TOTAL_SO_FAR"'秒`\n> **状态：** <font color=\"success\">成功</font>\n\n🚀 即将开始最后一步：部署到GitHub Pages",
-              "mentioned_list": []
-            }
-          }' \
-          "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=${{ secrets.WECHAT_QIYE_WEBHOOK_KEY }}"
       
+      # 发布到 GitHub Pages（只在最后一步推送）
       - name: 发布到 GitHub Pages
         id: deploy
         run: |
           DEPLOY_START=$(date +%s)
           echo "DEPLOY_START=$DEPLOY_START" >> $GITHUB_ENV
-          
+      
       - uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
       
-      - name: 发送构建完成总结通知
+      # 最终总结：计算所有步骤用时并发送完成通知
+      - name: 构建部署总结
         run: |
           DEPLOY_END=$(date +%s)
           DEPLOY_DURATION=$((DEPLOY_END - ${{ env.DEPLOY_START }}))
           TOTAL_DURATION=$((DEPLOY_END - ${{ env.START_TIME }}))
           
-          # 计算各步骤用时
+          # 获取各步骤用时
           CHECKOUT_DURATION=${{ env.CHECKOUT_DURATION }}
           NODE_SETUP_DURATION=${{ env.NODE_SETUP_DURATION }}
           INSTALL_DURATION=${{ env.INSTALL_DURATION }}
           BUILD_DURATION=${{ env.BUILD_DURATION }}
           
+          # 发送最终完成通知，包含所有步骤用时统计
           curl -s -H "Content-Type: application/json" \
           -X POST \
           -d '{
             "msgtype": "markdown",
             "markdown": {
-              "content": "**🎉 构建部署完成！**\n\n---\n> **最后一步用时：** `'"$DEPLOY_DURATION"'秒`\n> **总用时：** `'"$TOTAL_DURATION"'秒`\n> **最终状态：** <font color=\"success\">部署成功</font>\n> **网站地址：** [hallochatdev.github.io](https://hallochatdev.github.io)\n\n📊 **各步骤用时统计：**\n- 代码检出：`'"$CHECKOUT_DURATION"'秒`\n- 环境准备：`'"$NODE_SETUP_DURATION"'秒`\n- 依赖安装：`'"$INSTALL_DURATION"'秒`\n- 项目构建：`'"$BUILD_DURATION"'秒`\n- 部署发布：`'"$DEPLOY_DURATION"'秒`\n\n💫 所有步骤已完成，网站已更新！",
+              "content": "**🎉 构建部署完成！**\n\n---\n> **总用时：** `'"$TOTAL_DURATION"'秒`\n> **最终状态：** <font color=\"success\">部署成功</font>\n> **网站地址：** [hallochatdev.github.io](https://hallochatdev.github.io)\n\n📊 **各步骤用时统计：**\n- 代码检出：`'"$CHECKOUT_DURATION"'秒`\n- 环境准备：`'"$NODE_SETUP_DURATION"'秒`\n- 依赖安装：`'"$INSTALL_DURATION"'秒`\n- 项目构建：`'"$BUILD_DURATION"'秒`\n- 部署发布：`'"$DEPLOY_DURATION"'秒`\n\n💫 所有步骤已完成，网站已更新！",
               "mentioned_list": ["@all"]
             }
           }' \
