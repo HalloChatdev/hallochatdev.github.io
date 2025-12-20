@@ -115,7 +115,7 @@ jobs:
           -d '{
             "msgtype": "markdown",
             "markdown": {
-              "content": "**🎉 构建部署完成！**\n\n---\n> **总用时：** `'"$TOTAL_DURATION"'秒`\n> **最终状态：** <font color=\"success\">部署成功</font>\n> **网站地址：** [hallochatdev.github.io](https://hallochatdev.github.io)\n\n📊 **各步骤用时统计：**\n- 代码检出：`'"$CHECKOUT_DURATION"'秒`\n- 环境准备：`'"$NODE_SETUP_DURATION"'秒`\n- 依赖安装：`'"$INSTALL_DURATION"'秒`\n- 项目构建：`'"$BUILD_DURATION"'秒`\n- 部署发布：`'"$DEPLOY_DURATION"'秒`\n\n💫 所有步骤已完成，网站已更新！",
+              "content": "**🎉 构建部署完成！**\n\n---\n> **总用时：** `'"$TOTAL_DURATION"'秒`\n> **最终状态：** <font color=\"success\">部署成功</font>\n> **网站地址：** [https://dev.hallochat.cn](https://dev.hallochat.cn)\n\n📊 **各步骤用时统计：**\n- 代码检出：`'"$CHECKOUT_DURATION"'秒`\n- 环境准备：`'"$NODE_SETUP_DURATION"'秒`\n- 依赖安装：`'"$INSTALL_DURATION"'秒`\n- 项目构建：`'"$BUILD_DURATION"'秒`\n- 部署发布：`'"$DEPLOY_DURATION"'秒`\n\n💫 所有步骤已完成，网站已更新！",
               "mentioned_list": ["@all"]
             }
           }' \
